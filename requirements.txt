@@ -1,6 +1,5 @@
 streamlit
 pandas
 openpyxl
+Pillow
 requests
-speechrecognition
-pyaudio
