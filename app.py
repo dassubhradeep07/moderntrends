@@ -112,7 +112,6 @@ lang = st.sidebar.selectbox("🌐 Language",["English","Hindi","Bengali"])
 T = get_text(lang)
 
 if st.sidebar.button("📦 "+T["products"]):
-    #st.switch_page("pages/Products.py")
     st.switch_page("Products.py")
 
 #st.image("images/banner.jpg", use_container_width=True, caption="Discover the Art of Elegance: Exquisite Jewelry for Every Occasion")
@@ -145,9 +144,9 @@ for i,t in enumerate(types):
         if st.button("Explore", key=t):
             st.session_state["category"]=t
             st.switch_page("Products.py")
-            #st.switch_page("pages/Products")
 
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
