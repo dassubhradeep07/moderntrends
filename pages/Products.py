@@ -124,9 +124,10 @@ for i,row in data.iterrows():
         if st.button("View",key=row["code"]):
             st.session_state["product"]=row["code"]
             #st.switch_page("Product_Details.py")
-            st.switch_page("pages/Product_Details")
+            st.switch_page("pages/Product_Details.py")
 
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
