@@ -144,9 +144,10 @@ for i,t in enumerate(types):
         if st.button("Explore", key=t):
             st.session_state["category"]=t
             #st.switch_page("/workspaces/moderntrends/pages/Products.py")
-            st.switch_page("/pages/Products.py")
+            st.switch_page("pages/Products.py")
 
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
