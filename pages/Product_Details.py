@@ -81,7 +81,7 @@ lang = st.sidebar.selectbox("🌐 Language",["English","Hindi","Bengali"])
 T = get_text(lang)
 
 if st.sidebar.button("⬅ Products"):
-    st.switch_page("/workspaces/moderntrends/pages/Products.py")
+    st.switch_page("pages/Products.py")
     #st.switch_page("pages/Products")
 
 row=df[df["code"]==st.session_state["product"]].iloc[0]
@@ -110,6 +110,7 @@ def suggest():
 
 if st.button(T["suggest"]):
     st.write(suggest())
+
 
 
 
