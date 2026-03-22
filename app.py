@@ -1,5 +1,9 @@
+import base64
+import io
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
+from PIL import Image, ImageOps
 from utils import get_text
 
 def apply_style():
@@ -83,6 +87,22 @@ def apply_style():
     }
 
 
+    /* ---------- CAROUSEL FIT ---------- */
+    /* Force carousel images to fill and crop to the container */
+    .carousel-item img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+    /* Bootstrap override used by streamlit-carousel */
+    .carousel-inner img {
+        width: 100% !important;
+        height: auto !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+    }
+
     /* ---------- LUXURY CAPTION ---------- */
     .luxury-caption {
         text-align: center;
@@ -95,10 +115,121 @@ def apply_style():
         font-style: italic;
     }
 
-
-
     </style>
     """, unsafe_allow_html=True)
+
+
+def get_fitted_image(image_path, size=(700, 700)):
+    """Return a center-cropped image with consistent dimensions for card rendering."""
+    try:
+        img = Image.open(image_path).convert("RGB")
+        resample = getattr(Image, "Resampling", Image).LANCZOS
+        return ImageOps.fit(img, size, method=resample)
+    except Exception:
+        return image_path
+
+
+def image_to_data_url(image_path, max_width=1800):
+    """Preserve aspect ratio and return image as base64 data URL for HTML slider."""
+    try:
+        img = Image.open(image_path).convert("RGB")
+        w, h = img.size
+        if w > max_width:
+            new_h = int((max_width / w) * h)
+            resample = getattr(Image, "Resampling", Image).LANCZOS
+            img = img.resize((max_width, new_h), resample)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=88)
+        encoded = base64.b64encode(buf.getvalue()).decode()
+        return f"data:image/jpeg;base64,{encoded}"
+    except Exception:
+        return ""
+
+
+def get_slider_height(image_paths, target_width=1200, min_height=260, max_height=540):
+    """Derive a good slider height from the first valid banner aspect ratio."""
+    for path in image_paths:
+        try:
+            with Image.open(path) as img:
+                w, h = img.size
+                if w > 0 and h > 0:
+                    ratio = w / h
+                    derived = int(target_width / ratio)
+                    return max(min_height, min(max_height, derived))
+        except Exception:
+            continue
+    return 360
+
+
+def render_auto_banner_slider(image_paths):
+        """Render auto-playing slider where banner size auto-fits source aspect ratio."""
+        data_urls = [image_to_data_url(p) for p in image_paths]
+        data_urls = [u for u in data_urls if u]
+
+        if not data_urls:
+                return
+
+        slider_height = get_slider_height(image_paths)
+
+        slides_html = "\n".join(
+                [
+                        f'<div class="banner-slide" style="display:{"block" if i == 0 else "none"};">'
+                        f'<img src="{url}" alt="Banner {i+1}" />'
+                        '</div>'
+                        for i, url in enumerate(data_urls)
+                ]
+        )
+
+        html = f"""
+        <div class="banner-slider-wrap">
+            <div id="banner-slider" class="banner-slider">
+                {slides_html}
+            </div>
+        </div>
+
+        <style>
+            .banner-slider-wrap {{
+                width: 100%;
+                background: transparent;
+            }}
+            .banner-slider {{
+                width: 100%;
+                border-radius: 12px;
+                overflow: hidden;
+            }}
+            .banner-slide {{
+                width: 100%;
+                animation: fadeIn 0.5s ease;
+            }}
+            .banner-slide img {{
+                width: 100%;
+                height: {slider_height}px;
+                object-fit: cover;
+                object-position: center center;
+                display: block;
+                background: #ffffff;
+            }}
+            @keyframes fadeIn {{
+                from {{ opacity: 0.25; }}
+                to {{ opacity: 1; }}
+            }}
+        </style>
+
+        <script>
+            (function() {{
+                const slides = document.querySelectorAll('#banner-slider .banner-slide');
+                if (!slides || slides.length <= 1) return;
+                let idx = 0;
+                setInterval(() => {{
+                    slides[idx].style.display = 'none';
+                    idx = (idx + 1) % slides.length;
+                    slides[idx].style.display = 'block';
+                }}, 3200);
+            }})();
+        </script>
+        """
+
+        components.html(html, height=slider_height + 20, scrolling=False)
 
 
 
@@ -112,13 +243,28 @@ lang = st.sidebar.selectbox("🌐 Language",["English","Hindi","Bengali"])
 T = get_text(lang)
 
 if st.sidebar.button("📦 "+T["products"]):
-    st.switch_page("/workspaces/moderntrends/pages/Products.py")
+    st.switch_page("pages/Products.py")
 
 #st.image("images/banner.jpg", use_container_width=True, caption="Discover the Art of Elegance: Exquisite Jewelry for Every Occasion")
 
+# st.markdown('<div class="banner-container">', unsafe_allow_html=True)
+# st.image("images/banner-trends-1.jpg", use_container_width=True)
+# st.markdown('</div>', unsafe_allow_html=True)
+
 st.markdown('<div class="banner-container">', unsafe_allow_html=True)
-st.image("images/banner-trends-1.jpg", use_container_width=True)
+#st.image("images/banner-trends-1.jpg", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
+
+banner_files = [
+    "images/1_banner.JPG",
+    "images/2_banner.JPG",
+    "images/3_banner.JPG",
+]
+
+render_auto_banner_slider(banner_files)
+
+
+
 st.markdown("""
 <div class="luxury-caption">
     Discover the Art of Elegance: Exquisite Jewelry for Every Occasion
@@ -137,21 +283,12 @@ for i,t in enumerate(types):
 
     with cols[i%3]:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.image(item["img1"], use_container_width=True)
+        st.image(get_fitted_image(item["img1"]), use_container_width=True)
         st.subheader(t)
         st.write(item["name"])
 
         if st.button("Explore", key=t):
             st.session_state["category"]=t
-            #st.switch_page("/workspaces/moderntrends/pages/Products.py")
             st.switch_page("pages/Products.py")
 
         st.markdown('</div>', unsafe_allow_html=True)
-
-
-
-
-
-
-
-

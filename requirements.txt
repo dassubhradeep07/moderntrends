@@ -1,5 +1,6 @@
 streamlit
 pandas
 openpyxl
-Pillow
 requests
+pyaudio
+streamlit-carousel

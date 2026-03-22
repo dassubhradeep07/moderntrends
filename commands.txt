@@ -4,3 +4,8 @@ python -m streamlit run app.py
 python -m pip install openpyxl pandas
 
 python -m pip install requests speechrecognition pyaudio
+
+python -m pip install streamlit-carousel
+
+
+streamlit run app.py
