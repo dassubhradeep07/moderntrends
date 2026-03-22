@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 from PIL import Image, ImageOps
-from utils import get_text
+from utils import get_text, resolve_image_path
 
 def apply_style():
     import streamlit as st
@@ -122,7 +122,10 @@ def apply_style():
 def get_fitted_image(image_path, size=(700, 700)):
     """Return a center-cropped image with consistent dimensions for card rendering."""
     try:
-        img = Image.open(image_path).convert("RGB")
+        resolved = resolve_image_path(image_path)
+        if not resolved:
+            return None
+        img = Image.open(resolved).convert("RGB")
         resample = getattr(Image, "Resampling", Image).LANCZOS
         return ImageOps.fit(img, size, method=resample)
     except Exception:
@@ -132,7 +135,10 @@ def get_fitted_image(image_path, size=(700, 700)):
 def image_to_data_url(image_path, max_width=1800):
     """Preserve aspect ratio and return image as base64 data URL for HTML slider."""
     try:
-        img = Image.open(image_path).convert("RGB")
+        resolved = resolve_image_path(image_path)
+        if not resolved:
+            return ""
+        img = Image.open(resolved).convert("RGB")
         w, h = img.size
         if w > max_width:
             new_h = int((max_width / w) * h)
