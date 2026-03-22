@@ -4,7 +4,13 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 from PIL import Image, ImageOps
-from utils import get_text, resolve_image_path
+from utils import get_text
+
+try:
+    from utils import resolve_image_path
+except ImportError:
+    def resolve_image_path(image_path):
+        return image_path
 
 def apply_style():
     import streamlit as st
