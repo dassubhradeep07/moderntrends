@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import speech_recognition as sr
+from PIL import Image, ImageOps
 from utils import calculate_price, get_text
 
 def apply_style():
@@ -37,7 +39,7 @@ def apply_style():
     /* ---------- IMAGE (ONLY FIX HEIGHT) ---------- */
     .card img {
         width: 100%;
-        height: 200px;
+        height: 220px;
         object-fit: cover;
         border-radius: 10px;
     }
@@ -70,6 +72,16 @@ def apply_style():
     """, unsafe_allow_html=True)
 
 
+def get_fitted_image(image_path, size=(700, 700)):
+    """Return a center-cropped image with consistent dimensions for card rendering."""
+    try:
+        img = Image.open(image_path).convert("RGB")
+        resample = getattr(Image, "Resampling", Image).LANCZOS
+        return ImageOps.fit(img, size, method=resample)
+    except Exception:
+        return None
+
+
 st.set_page_config(layout="wide")
 apply_style()
 
@@ -88,13 +100,13 @@ st.title(cat)
 search = st.text_input(T["search"])
 
 if st.button("🎤 "+T["voice"]):
-    r=sr.Recognizer()
-    with sr.Microphone() as source:
-        audio=r.listen(source)
     try:
-        search=r.recognize_google(audio)
-    except:
-        pass
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            audio = r.listen(source)
+        search = r.recognize_google(audio)
+    except Exception:
+        st.info("Voice input is not available in this environment. Please use text search.")
 
 st.subheader(T["filters"])
 
@@ -117,20 +129,21 @@ for i,row in data.iterrows():
 
     with cols[i%3]:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.image(row["img1"],use_container_width=True)
+        fitted = get_fitted_image(row["img1"])
+        if fitted is not None:
+            st.image(fitted, use_container_width=True)
+        else:
+            st.markdown(
+                '<div style="height:220px;display:flex;align-items:center;justify-content:center;'
+                'background:#f3f4f6;border-radius:10px;color:#9aa0a6;font-weight:600;">Image not available</div>',
+                unsafe_allow_html=True,
+            )
         st.write(row["name"])
+        st.caption(str(row.get("description", "")))
         st.success(f"₹ {price:,.0f}")
 
         if st.button("View",key=row["code"]):
             st.session_state["product"]=row["code"]
-            #st.switch_page("Product_Details.py")
             st.switch_page("pages/Product_Details.py")
 
         st.markdown('</div>', unsafe_allow_html=True)
-
-
-
-
-
-
-
