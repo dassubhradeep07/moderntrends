@@ -126,7 +126,7 @@ def get_fitted_image(image_path, size=(700, 700)):
         resample = getattr(Image, "Resampling", Image).LANCZOS
         return ImageOps.fit(img, size, method=resample)
     except Exception:
-        return image_path
+        return None
 
 
 def image_to_data_url(image_path, max_width=1800):
@@ -283,7 +283,15 @@ for i,t in enumerate(types):
 
     with cols[i%3]:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.image(get_fitted_image(item["img1"]), use_container_width=True)
+        fitted = get_fitted_image(item["img1"])
+        if fitted is not None:
+            st.image(fitted, use_container_width=True)
+        else:
+            st.markdown(
+                '<div style="height:220px;display:flex;align-items:center;justify-content:center;'
+                'background:#f3f4f6;border-radius:10px;color:#9aa0a6;font-weight:600;">Image not available</div>',
+                unsafe_allow_html=True,
+            )
         st.subheader(t)
         st.write(item["name"])
 
